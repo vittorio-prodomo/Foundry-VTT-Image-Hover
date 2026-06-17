@@ -43,6 +43,19 @@ function registerModuleSettings() {
 }
 
 /**
+ * Read the live canvas pan/zoom in a way that survives v14.
+ * v14 deprecates `canvas.scene._viewPosition`; the PIXI stage transform is the
+ * supported live source on both v13 and v14.
+ */
+function getCanvasView() {
+  const stage = canvas?.stage;
+  if (stage?.pivot && stage?.scale) {
+    return { x: stage.pivot.x, y: stage.pivot.y, scale: stage.scale.x };
+  }
+  return canvas?.scene?._viewPosition ?? { x: 0, y: 0, scale: 1 };
+}
+
+/**
  * Add socket to trigger all users to show art.
  */
 function registerShowArtSocket() {
@@ -248,7 +261,7 @@ class ImageHoverHUD extends HandlebarsApplicationMixin(
    * @param {Number} imageHeight height of original image (pixels)
    */
   changePosition(imageWidth, imageHeight) {
-    const centre = canvas.scene._viewPosition; // Middle of the screen
+    const centre = getCanvasView(); // Middle of the screen
     let imageWidthScaled =
       window.innerWidth / (imageSizeSetting * centre.scale); // Scaled width of image to canvas
     let imageHeightScaled = imageWidthScaled * (imageHeight / imageWidth); // Scaled height from width
@@ -501,7 +514,7 @@ const renderHoverSetting = async (app, html, data) => {
    * Ensure flag is updated on "update" and correct value is shown when changed.
    */
   if (data.isGM) {
-    const token = app.token;
+    const token = app.document ?? app.token;
 
     const hideImageStatus = (await token.getFlag("image-hover", "hideArt"))
       ? "checked"
