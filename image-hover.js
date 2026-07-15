@@ -332,7 +332,10 @@ class ImageHoverHUD extends HandlebarsApplicationMixin(
       !token.actor ||
       imageHoverActive === false ||
       (token.actor.permission < actorRequirementSetting &&
-        token.actor.ownership["default"] !== -1)
+        token.actor.ownership["default"] !== -1) ||
+      // T28d: suppress hover art for NPCs concealed at distance by npc-name-veil
+      // (distance axis only; no-op when that module is absent/disabled or the viewer is omniscient)
+      game.modules.get("npc-name-veil")?.api?.isConcealed(token)
     ) {
       return;
     }
